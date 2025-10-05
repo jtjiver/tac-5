@@ -44,6 +44,23 @@ app = FastAPI(title="ADW Webhook Trigger", description="GitHub webhook endpoint 
 
 print(f"Starting ADW Webhook Trigger on port {PORT}")
 
+# Check Claude Code version
+try:
+    claude_path = os.getenv("CLAUDE_CODE_PATH", "claude")
+    version_result = subprocess.run(
+        [claude_path, "--version"],
+        capture_output=True,
+        text=True,
+        timeout=5
+    )
+    if version_result.returncode == 0:
+        version = version_result.stdout.strip()
+        print(f"✅ Claude Code version: {version}")
+    else:
+        print(f"⚠️  Failed to get Claude Code version")
+except Exception as e:
+    print(f"⚠️  Could not check Claude Code version: {e}")
+
 # Bot identifier to prevent webhook loops
 ADW_BOT_IDENTIFIER = "[ADW-BOT]"
 

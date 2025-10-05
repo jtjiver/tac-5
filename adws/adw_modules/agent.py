@@ -173,6 +173,31 @@ def prompt_claude_code(request: AgentPromptRequest) -> AgentPromptResponse:
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
 
+    # Get project root directory (3 levels up from this file: adws/adw_modules/agent.py)
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+    # Log Claude Code version before execution
+    try:
+        version_result = subprocess.run(
+            [CLAUDE_PATH, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if version_result.returncode == 0:
+            version = version_result.stdout.strip()
+            print(f"[Agent: {request.agent_name}] Using Claude Code: {version}")
+    except Exception as e:
+        print(f"[Agent: {request.agent_name}] Could not check Claude version: {e}")
+
+    # Log command details
+    print(f"[Agent: {request.agent_name}] === PROMPT_CLAUDE_CODE DEBUG ===")
+    print(f"[Agent: {request.agent_name}] Claude path: {CLAUDE_PATH}")
+    print(f"[Agent: {request.agent_name}] Prompt (first 300 chars): {request.prompt[:300]}")
+    print(f"[Agent: {request.agent_name}] Model: {request.model}")
+    print(f"[Agent: {request.agent_name}] Output file: {request.output_file}")
+    print(f"[Agent: {request.agent_name}] CWD: {project_root}")
+
     # Build command - always use stream-json format and verbose
     cmd = [CLAUDE_PATH, "-p", request.prompt]
     cmd.extend(["--model", request.model])
@@ -183,14 +208,13 @@ def prompt_claude_code(request: AgentPromptRequest) -> AgentPromptResponse:
     if request.dangerously_skip_permissions:
         cmd.append("--dangerously-skip-permissions")
 
-    # Set up environment with only required variables
-    env = get_claude_env()
-
     try:
         # Execute Claude Code and pipe output to file
+        # IMPORTANT: Run from project root so Claude Code can find .claude/commands/
+        # TESTING: Use env=None to inherit full environment (needed for custom slash commands)
         with open(request.output_file, "w") as f:
             result = subprocess.run(
-                cmd, stdout=f, stderr=subprocess.PIPE, text=True, env=env
+                cmd, stdout=f, stderr=subprocess.PIPE, text=True, env=None, cwd=project_root
             )
 
         if result.returncode == 0:
@@ -198,6 +222,17 @@ def prompt_claude_code(request: AgentPromptRequest) -> AgentPromptResponse:
 
             # Parse the JSONL file
             messages, result_message = parse_jsonl_output(request.output_file)
+
+            print(f"[Agent: {request.agent_name}] === API RESPONSE DEBUG ===")
+            if result_message:
+                print(f"[Agent: {request.agent_name}] Result message type: {result_message.get('type')}/{result_message.get('subtype')}")
+                print(f"[Agent: {request.agent_name}] Success: {not result_message.get('is_error', False)}")
+                usage = result_message.get('usage', {})
+                print(f"[Agent: {request.agent_name}] Input tokens: {usage.get('input_tokens', 0)}")
+                print(f"[Agent: {request.agent_name}] Output tokens: {usage.get('output_tokens', 0)}")
+                print(f"[Agent: {request.agent_name}] Result (first 200 chars): {str(result_message.get('result', ''))[:200]}")
+            else:
+                print(f"[Agent: {request.agent_name}] WARNING: No result message found in output!")
 
             # Convert JSONL to JSON array file
             json_file = convert_jsonl_to_json(request.output_file)
@@ -248,6 +283,13 @@ def execute_template(request: AgentTemplateRequest) -> AgentPromptResponse:
     """Execute a Claude Code template with slash command and arguments."""
     # Construct prompt from slash command and args
     prompt = f"{request.slash_command} {' '.join(request.args)}"
+
+    print(f"[{request.agent_name}] === EXECUTE_TEMPLATE DEBUG ===")
+    print(f"[{request.agent_name}] Slash command: {request.slash_command}")
+    print(f"[{request.agent_name}] Args: {request.args}")
+    print(f"[{request.agent_name}] Constructed prompt (first 200 chars): {prompt[:200]}")
+    print(f"[{request.agent_name}] Model: {request.model}")
+    print(f"[{request.agent_name}] ADW ID: {request.adw_id}")
 
     # Create output directory with adw_id at project root
     # __file__ is in adws/adw_modules/, so we need to go up 3 levels to get to project root
