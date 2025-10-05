@@ -17,10 +17,12 @@ from core.data_models import (
     InsightsResponse,
     HealthCheckResponse,
     TableSchema,
-    ColumnInfo
+    ColumnInfo,
+    GenerateQueryRequest,
+    GenerateQueryResponse
 )
 from core.file_processor import convert_csv_to_sqlite, convert_json_to_sqlite, convert_jsonl_to_sqlite
-from core.llm_processor import generate_sql
+from core.llm_processor import generate_sql, generate_natural_language_query
 from core.sql_processor import execute_sql_safely, get_database_schema
 from core.insights import generate_insights
 from core.sql_security import (
@@ -204,6 +206,45 @@ async def generate_insights_endpoint(request: InsightsRequest) -> InsightsRespon
             table_name=request.table_name,
             insights=[],
             generated_at=datetime.now(),
+            error=str(e)
+        )
+
+@app.post("/api/generate-query", response_model=GenerateQueryResponse)
+async def generate_query_endpoint(request: GenerateQueryRequest) -> GenerateQueryResponse:
+    """Generate natural language query based on database schema"""
+    try:
+        # Get database schema
+        schema_info = get_database_schema()
+
+        # Validate that at least one table exists
+        if not schema_info.get('tables') or len(schema_info['tables']) == 0:
+            return GenerateQueryResponse(
+                query="",
+                tables_used=[],
+                error="No tables available. Please upload data first."
+            )
+
+        # Generate natural language query
+        query = generate_natural_language_query(schema_info)
+
+        # Extract table names mentioned in the query (simple approach - check if table name appears in query)
+        tables_used = []
+        for table_name in schema_info['tables'].keys():
+            if table_name.lower() in query.lower():
+                tables_used.append(table_name)
+
+        response = GenerateQueryResponse(
+            query=query,
+            tables_used=tables_used
+        )
+        logger.info(f"[SUCCESS] Query generated: {query}, tables_used: {tables_used}")
+        return response
+    except Exception as e:
+        logger.error(f"[ERROR] Query generation failed: {str(e)}")
+        logger.error(f"[ERROR] Full traceback:\n{traceback.format_exc()}")
+        return GenerateQueryResponse(
+            query="",
+            tables_used=[],
             error=str(e)
         )
 
