@@ -133,27 +133,14 @@ h2 {
 }
 
 .plaid-button {
-  background-color: #f8f9fa;
-  background-image:
-    repeating-linear-gradient(45deg,
-      transparent,
-      transparent 10px,
-      rgba(102, 126, 234, 0.15) 10px,
-      rgba(102, 126, 234, 0.15) 20px),
-    repeating-linear-gradient(-45deg,
-      transparent,
-      transparent 10px,
-      rgba(118, 75, 162, 0.15) 10px,
-      rgba(118, 75, 162, 0.15) 20px);
-  color: var(--primary-color);
-  border: 2px solid var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
   font-weight: 600;
 }
 
 .plaid-button:hover {
-  background-color: rgba(102, 126, 234, 0.05);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .plaid-button:disabled {
