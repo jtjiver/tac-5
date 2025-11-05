@@ -48,9 +48,12 @@ from adw_modules.data_types import GitHubIssue, IssueClassSlashCommand
 
 
 def check_env_vars(logger: Optional[logging.Logger] = None) -> None:
-    """Check that all required environment variables are set."""
+    """Check that all required environment variables are set.
+
+    Note: ANTHROPIC_API_KEY is optional - Claude Code will use Pro subscription
+    keychain if not set.
+    """
     required_vars = [
-        "ANTHROPIC_API_KEY",
         "CLAUDE_CODE_PATH",
     ]
     missing_vars = [var for var in required_vars if not os.getenv(var)]
