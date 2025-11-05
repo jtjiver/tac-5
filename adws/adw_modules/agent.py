@@ -105,7 +105,7 @@ def get_claude_env() -> Dict[str, str]:
     result = subprocess.run(cmd, capture_output=True, text=True, env={})
     """
     required_env_vars = {
-        # Anthropic Configuration (required)
+        # Anthropic Configuration (optional - uses Pro subscription keychain if not set)
         "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
         # Claude Code Configuration
         "CLAUDE_CODE_PATH": os.getenv("CLAUDE_CODE_PATH", "claude"),

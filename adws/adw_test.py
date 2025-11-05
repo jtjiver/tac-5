@@ -17,7 +17,7 @@ Workflow:
 5. Push and update PR
 
 Environment Requirements:
-- ANTHROPIC_API_KEY: Anthropic API key
+- ANTHROPIC_API_KEY: (Optional) Anthropic API key - uses Pro subscription if not set
 - CLAUDE_CODE_PATH: Path to Claude CLI
 - GITHUB_PAT: (Optional) GitHub Personal Access Token - only if using a different account than 'gh auth login'
 """
@@ -61,9 +61,12 @@ MAX_E2E_TEST_RETRY_ATTEMPTS = 2  # E2E ui tests
 
 
 def check_env_vars(logger: Optional[logging.Logger] = None) -> None:
-    """Check that all required environment variables are set."""
+    """Check that all required environment variables are set.
+
+    Note: ANTHROPIC_API_KEY is optional - Claude Code will use Pro subscription
+    keychain if not set.
+    """
     required_vars = [
-        "ANTHROPIC_API_KEY",
         "CLAUDE_CODE_PATH",
     ]
     missing_vars = [var for var in required_vars if not os.getenv(var)]

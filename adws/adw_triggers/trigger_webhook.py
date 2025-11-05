@@ -14,7 +14,8 @@ Usage: uv run trigger_webhook.py
 
 Environment Requirements:
 - PORT: Server port (default: 8001)
-- All adw_plan_build.py requirements (GITHUB_PAT, ANTHROPIC_API_KEY, etc.)
+- ANTHROPIC_API_KEY: (Optional) - uses Pro subscription if not set
+- GITHUB_PAT: (Optional) - uses 'gh auth login' if not set
 """
 
 import os
