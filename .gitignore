@@ -56,4 +56,4 @@ claude-max-output.jsonl
 
 storage.json
 
-deep_specs/
+deep_specs/.venv_e2e/
